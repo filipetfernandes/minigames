@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦆 Racing Arena - Multiplayer Championship</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600;700;800;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Exo 2', sans-serif;
+    background: #0a0a0a;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Animated Background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    z-index: -2;
+}
+
+/* Particles Background - mais sutil */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.1), transparent),
+        radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.08), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.12), transparent);
+    background-repeat: repeat;
+    background-size: 200px 100px;
+    animation: particleFloat 30s linear infinite;
+    z-index: -1;
+}
+
+@keyframes particleFloat {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-100px) rotate(360deg); }
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(30px);
+    border-radius: 30px;
+    padding: 50px;
+    margin: 20px auto;
+    max-width: 1200px;
+    width: 95%;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 40px 80px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 0 40px rgba(120, 119, 198, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(64, 153, 255, 0.05), transparent);
+    animation: rotate 20s linear infinite;
+    z-index: -1;
+}
+
+@keyframes rotate {
+    100% { transform: rotate(360deg); }
+}
+
+.screen {
+    display: none;
+    animation: screenTransition 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes screenTransition {
+    from { 
+        opacity: 0; 
+        transform: translateY(30px) scale(0.95);
+        filter: blur(5px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+}
+
+h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 3.2em;
+    font-weight: 800;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 40px;
+    text-shadow: 0 0 20px rgba(64, 153, 255, 0.4);
+    letter-spacing: 2px;
+}
+
+h2 {
+    font-family: 'Orbitron', monospace;
+    color: #b0b0b0;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+    font-weight: 600;
+    text-align: center;
+}
+
+h3, h4 {
+    color: #e0e0e0;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* Neon Input Styles */
+input[type="text"] {
+    padding: 18px 25px;
+    border: 2px solid rgba(64, 153, 255, 0.3);
+    border-radius: 15px;
+    font-size: 16px;
+    margin: 15px;
+    width: 320px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 500;
+    color: #2c3e50;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+input[type="text"]::placeholder {
+    color: #7f8c8d;
+    text-align: center;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #4099ff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 153, 255, 0.2);
+    background: rgba(255, 255, 255, 1);
+}
+
+select {
+    padding: 18px 25px;
+    border: 2px solid rgba(64, 153, 255, 0.3);
+    border-radius: 15px;
+    font-size: 16px;
+    margin: 15px;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 500;
+    color: #2c3e50;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+select:focus {
+    outline: none;
+    border-color: #4099ff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 153, 255, 0.2);
+}
+
+/* 3D Neon Buttons */
+button {
+    padding: 18px 35px;
+    margin: 15px;
+    border: none;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    font-family: 'Exo 2', sans-serif;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transform-style: preserve-3d;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.6s ease;
+}
+
+button:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00f5ff, #0080ff);
+    color: #ffffff;
+    box-shadow: 
+        0 10px 25px rgba(0, 245, 255, 0.3),
+        0 0 20px rgba(0, 245, 255, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-5px) rotateX(10deg);
+    box-shadow: 
+        0 20px 40px rgba(0, 245, 255, 0.4),
+        0 0 30px rgba(0, 245, 255, 0.6);
+    background: linear-gradient(135deg, #00ffff, #0099ff);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: #ffffff;
+    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-5px) rotateX(10deg);
+    box-shadow: 0 20px 40px rgba(108, 117, 125, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    color: #ffffff;
+    box-shadow: 
+        0 10px 25px rgba(0, 255, 136, 0.3),
+        0 0 20px rgba(0, 255, 136, 0.2);
+}
+
+.btn-success:hover {
+    transform: translateY(-5px) rotateX(10deg);
+    box-shadow: 
+        0 20px 40px rgba(0, 255, 136, 0.4),
+        0 0 30px rgba(0, 255, 136, 0.6);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff3366, #ff0044);
+    color: #ffffff;
+    box-shadow: 0 10px 25px rgba(255, 51, 102, 0.3);
+}
+
+.btn-danger:hover {
+    transform: translateY(-5px) rotateX(10deg);
+    box-shadow: 0 20px 40px rgba(255, 51, 102, 0.4);
+}
+
+/* Holographic Room Code */
+.room-code {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(64, 153, 255, 0.3);
+    border-radius: 20px;
+    padding: 25px;
+    margin: 30px 0;
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: bold;
+    color: #2c3e50;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(15px);
+}
+
+.participant-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.add-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    margin-left: 20px;
+    box-shadow: 
+        0 10px 25px rgba(0, 255, 136, 0.3),
+        0 0 20px rgba(0, 255, 136, 0.2);
+    transition: all 0.4s ease;
+}
+
+.add-btn:hover {
+    transform: translateY(-3px) scale(1.1) rotateZ(180deg);
+    box-shadow: 
+        0 15px 35px rgba(0, 255, 136, 0.5),
+        0 0 30px rgba(0, 255, 136, 0.6);
+}
+
+/* Futuristic Race Track */
+.race-track {
+    background: 
+        linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 245, 255, 0.1)),
+        radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    border: 3px solid rgba(0, 255, 136, 0.6);
+    border-radius: 25px;
+    height: 500px;
+    position: relative;
+    margin: 30px 0;
+    overflow: hidden;
+    min-width: 500px;
+    box-shadow: 
+        0 20px 40px rgba(0, 255, 136, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 40px rgba(0, 255, 136, 0.1);
+    backdrop-filter: blur(20px);
+}
+
+.race-track::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 48px,
+            rgba(255, 255, 255, 0.03) 50px,
+            rgba(255, 255, 255, 0.03) 52px
+        );
+    animation: trackLines 2s linear infinite;
+}
+
+@keyframes trackLines {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(50px); }
+}
+
+.finish-line {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    background: repeating-linear-gradient(
+        0deg,
+        #fff,
+        #fff 15px,
+        #000 15px,
+        #000 30px
+    );
+    border-radius: 6px;
+    box-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.5),
+        inset 0 0 10px rgba(0, 0, 0, 0.3);
+    animation: finishLinePulse 2s ease-in-out infinite;
+}
+
+@keyframes finishLinePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Enhanced Racers */
+.duck {
+    position: absolute;
+    left: 15px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    transition: left 0.08s linear;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 
+        0 8px 20px rgba(0,0,0,0.3),
+        0 0 15px rgba(255,255,255,0.2),
+        inset 0 2px 0 rgba(255,255,255,0.3);
+    border: 3px solid rgba(255,255,255,0.6);
+    backdrop-filter: blur(10px);
+    animation: racerFloat 2s ease-in-out infinite;
+}
+
+@keyframes racerFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+}
+
+.duck-name {
+    position: absolute;
+    top: -35px;
+    left: -30px;
+    background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(0,0,0,0.7));
+    color: #00f5ff;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.8);
+}
+
+/* Holographic Popup */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(15px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: popupFadeIn 0.5s ease-out;
+}
+
+.popup.active {
+    display: flex;
+}
+
+@keyframes popupFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.popup-content {
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(30px);
+    padding: 50px;
+    border-radius: 30px;
+    text-align: center;
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 0 40px rgba(0, 245, 255, 0.3);
+    max-width: 600px;
+    width: 90%;
+    border: 2px solid rgba(0, 245, 255, 0.3);
+    animation: popupSlideIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes popupSlideIn {
+    from { opacity: 0; transform: scale(0.8) translateY(-30px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Neon Connection Status */
+.connection-status {
+    padding: 15px 25px;
+    margin: 20px 0;
+    border-radius: 20px;
+    font-weight: 600;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    border: 2px solid;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.connected {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.05));
+    color: #00ff88;
+    border-color: #00ff88;
+    box-shadow: 
+        0 8px 25px rgba(0, 255, 136, 0.2),
+        0 0 20px rgba(0, 255, 136, 0.3);
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+}
+
+.disconnected {
+    background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(255, 51, 102, 0.05));
+    color: #ff3366;
+    border-color: #ff3366;
+    box-shadow: 
+        0 8px 25px rgba(255, 51, 102, 0.2),
+        0 0 20px rgba(255, 51, 102, 0.3);
+    text-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+    animation: disconnectedPulse 2s ease-in-out infinite;
+}
+
+@keyframes disconnectedPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Futuristic Live Ranking */
+.live-ranking {
+    width: 320px;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(30px);
+    border-radius: 25px;
+    padding: 30px;
+    border: 2px solid rgba(255, 0, 255, 0.3);
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        0 0 40px rgba(255, 0, 255, 0.2);
+}
+
+.live-ranking h4 {
+    text-align: center;
+    color: #ff00ff;
+    margin-bottom: 25px;
+    font-size: 1.4em;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+}
+
+.live-ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 15px;
+    border-left: 4px solid #666;
+    font-size: 14px;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.live-ranking-item:hover {
+    transform: translateX(8px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.live-ranking-item.finished {
+    border-left-color: #00ff88;
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(255, 255, 255, 0.05));
+    animation: finishGlow 1s ease-out;
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+}
+
+@keyframes finishGlow {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); box-shadow: 0 8px 30px rgba(0, 255, 136, 0.5); }
+    100% { transform: scale(1); }
+}
+
+.live-ranking-item.first-place {
+    border-left-color: #FFD700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 255, 255, 0.05));
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+    animation: goldShimmer 3s ease-in-out infinite;
+}
+
+@keyframes goldShimmer {
+    0%, 100% { box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4); }
+    50% { box-shadow: 0 12px 35px rgba(255, 215, 0, 0.6); }
+}
+
+.live-ranking-item.second-place {
+    border-left-color: #C0C0C0;
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(255, 255, 255, 0.05));
+    box-shadow: 0 6px 20px rgba(192, 192, 192, 0.3);
+}
+
+.live-ranking-item.third-place {
+    border-left-color: #CD7F32;
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), rgba(255, 255, 255, 0.05));
+    box-shadow: 0 6px 20px rgba(205, 127, 50, 0.3);
+}
+
+.live-position {
+    font-weight: bold;
+    margin-right: 20px;
+    min-width: 35px;
+    text-align: center;
+    font-size: 16px;
+    font-family: 'Orbitron', monospace;
+}
+
+.live-position.first { 
+    color: #FFD700; 
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    animation: goldPulse 2s ease-in-out infinite;
+}
+
+@keyframes goldPulse {
+    0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+    50% { text-shadow: 0 0 25px rgba(255, 215, 0, 1); }
+}
+
+.live-position.second { 
+    color: #C0C0C0; 
+    text-shadow: 0 0 10px rgba(192, 192, 192, 0.8);
+}
+
+.live-position.third { 
+    color: #CD7F32; 
+    text-shadow: 0 0 10px rgba(205, 127, 50, 0.8);
+}
+
+.live-name {
+    flex: 1;
+    font-weight: 600;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.finish-status {
+    font-size: 11px;
+    color: #00f5ff;
+    font-style: italic;
+    font-weight: 500;
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
+}
+
+#raceStatus {
+    margin-top: 25px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #00f5ff;
+    font-weight: 600;
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 245, 255, 0.1);
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+    font-family: 'Orbitron', monospace;
+}
+
+/* Epic Countdown - mais sutil */
+.countdown {
+    font-size: 180px;
+    font-weight: 900;
+    font-family: 'Orbitron', monospace;
+    color: #4099ff;
+    animation: epicCountdown 1s ease-in-out;
+    text-shadow: 0 0 30px rgba(64, 153, 255, 0.6);
+    text-align: center;
+    position: relative;
+}
+
+#gameInfo {
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(25px);
+    padding: 25px;
+    border-radius: 20px;
+    margin: 25px 0;
+    border: 2px solid rgba(0, 245, 255, 0.2);
+    box-shadow: 
+        0 8px 25px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+#gameInfo p {
+    margin: 12px 0;
+    color: #e0e0e0;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+#gameInfo strong {
+    color: #00f5ff;
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 30px 20px;
+        margin: 10px;
+    }
+    
+    h1 {
+        font-size: 2.5em;
+    }
+    
+    input[type="text"], select {
+        width: 100%;
+        max-width: 280px;
+        font-size: 16px;
+    }
+    
+    .race-track {
+        min-width: 300px;
+        height: 400px;
+    }
+    
+    .live-ranking {
+        width: 100%;
+        margin-top: 25px;
+    }
+    
+    .countdown {
+        font-size: 120px;
+    }
+    
+    button {
+        padding: 15px 25px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 25px 15px;
+    }
+    
+    h1 {
+        font-size: 2em;
+        letter-spacing: 1px;
+    }
+    
+    .race-track {
+        height: 350px;
+    }
+    
+    .countdown {
+        font-size: 100px;
+    }
+}
+
+/* Advanced Animations */
+.container {
+    animation: containerMaterialization 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes containerMaterialization {
+    0% { 
+        opacity: 0; 
+        transform: translateY(60px) scale(0.9) rotateX(20deg);
+        filter: blur(10px);
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1) rotateX(0deg);
+        filter: blur(0px);
+    }
+}
+
+/* Glow Effects */
+.glow-text {
+    animation: textGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+    from { text-shadow: 0 0 10px rgba(0, 245, 255, 0.5); }
+    to { text-shadow: 0 0 20px rgba(0, 245, 255, 1), 0 0 30px rgba(0, 245, 255, 0.8); }
+}
+
+/* Loading Animation */
+.loading-dots::after {
+    content: '';
+    animation: loadingDots 2s ease-in-out infinite;
+}
+
+@keyframes loadingDots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<!-- Status de Conexão -->
+<div id="connectionStatus" class="connection-status disconnected">
+    <span class="loading-dots">Conectando ao servidor</span>
+</div>
+
+<!-- Tela Inicial -->
+<div id="homeScreen" class="screen active">
+    <h1>🏁 RACING ARENA</h1>
+    <h2 class="glow-text">MULTIPLAYER CHAMPIONSHIP</h2>
+    <input type="text" id="playerName" placeholder="⚡ Digite seu nome de piloto" maxlength="20">
+    <br>
+    <button class="btn-primary" onclick="createRoom()">🚀 CRIAR ARENA</button>
+    <button class="btn-secondary" onclick="showJoinPopup()">🎯 ENTRAR NA ARENA</button>
+</div>
+
+<!-- Tela de Configuração da Sala -->
+<div id="configScreen" class="screen">
+    <h2>⚙️ CONFIGURAR ARENA</h2>
+    <button class="btn-secondary" onclick="showScreen('homeScreen')">← VOLTAR</button>
+    <br><br>
+    
+    <label style="color: #00f5ff; font-weight: 600; font-size: 18px;">Escolha o Tipo de Corrida:</label>
+    <select id="gameSelect" onchange="showGameConfig()">
+        <option value="">🎮 Selecione um jogo</option>
+        <option value="patinho">🦆 Aleatório</option>
+        <option value="moranguinho">🍓 COMPETITIVIDADE</option>
+    </select>
+
+    <!-- Configuração do Patinho -->
+    <div id="patinhoConfig" style="display: none;">
+        <h3 style="color: #00ff88;">🏆 Configuração</h3>
+        <label style="color: #ff00ff; font-weight: 600;">🏁 Distância da Pista:</label>
+        <select id="raceDistance">
+            <option value="50">🏃 50 metros (10s)</option>
+            <option value="100">🚴 100 metros (20s)</option>
+            <option value="150" selected>🏎️ 150 metros (30s)</option>
+            <option value="200">🚀 200 metros (40s)</option>
+            <option value="250">🛸 250 metros (50s)</option>
+            <option value="300">🚁 300 metros (1min)</option>
+            <option value="500">✈️ 500 metros (1min 40s)</option>
+            <option value="1000">🚀 1 KM (3min 20s)</option>
+        </select>
+        <br><br>
+        <h4 style="color: #ffff00;">👥 Pilotos Competidores:</h4>
+        <div id="participantsList">
+            <div class="participant-input">
+                <input type="text" placeholder="🏁 Nome do piloto" maxlength="15">
+                <button class="add-btn" onclick="addParticipant()">+</button>
+            </div>
+        </div>
+        <br>
+        <button class="btn-success" onclick="startGameRoom()">🔥 INICIAR ARENA</button>
+    </div>
+
+    <!-- Configuração do Moranguinho (placeholder) -->
+    <div id="morangninhoConfig" style="display: none;">
+        <h3 style="color: #00ff88;">🍓 Configuração</h3>
+        <label style="color: #ff00ff; font-weight: 600;">🏁 Distância da Pista:</label>
+        <select id="raceDistance2">
+            <option value="100">🏃 100 metros</option>
+            <option value="200" selected>🏃 200 metros</option>
+            <option value="300">🚴 300 metros</option>
+            <option value="400" >🏎️ 400 metros</option>
+            <option value="500">🚀 500 metros</option>
+            <option value="750">✈️ 750 metros</option>
+            <option value="1000">🚀 1 KM</option>
+            <option value="2000">🚁 2 KM</option>
+        </select>
+        <br>
+        <button class="btn-success" onclick="startGameRoom()">🔥 INICIAR ARENA</button>
+    </div>
+</div>
+
+<!-- Tela do Jogo -->
+<div id="gameScreen" class="screen">
+    <h2>🏁 ARENA DE CORRIDA</h2>
+    <div class="room-code">
+        CÓDIGO DA ARENA: <span id="roomCodeDisplay"></span>
+    </div>
+    
+    <div id="gameInfo">
+        <p><strong>🏁 Distância:</strong> <span id="raceDistanceDisplay"></span></p>
+        <p><strong>👥 Pilotos:</strong> <span id="participantsDisplay"></span></p>
+    </div>
+
+    <div id="raceArea">
+        <div style="display: flex; gap: 25px; align-items: flex-start;">
+            <div style="flex: 1;">
+                <div class="race-track" id="raceTrack">
+                    <div class="finish-line"></div>
+                </div>
+                
+                <div id="gameControls">
+                    <!-- Só aparece para o criador da sala -->
+                    <button id="startRaceBtn" class="btn-success" onclick="startRace()" style="display: none;">
+                        🏁 INICIAR CORRIDA ÉPICA
+                    </button>
+                </div>
+
+                <div id="countdown" style="display: none;"></div>
+            </div>
+            
+            <!-- Placar em tempo real -->
+            <div id="liveRanking" class="live-ranking" style="display: none;">
+                <h4>🏆 CLASSIFICAÇÃO</h4>
+                <div id="liveRankingList"></div>
+                <div id="raceStatus">
+                    Aguardando largada...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-secondary" onclick="leaveRoom()">🚪 SAIR DA ARENA</button>
+</div>
+</div>
+
+<!-- Popup para entrar em sala -->
+<div id="joinPopup" class="popup">
+<div class="popup-content">
+    <h3 style="color: #00f5ff;">🎯 ENTRAR NA ARENA</h3>
+    <input type="text" id="roomCodeInput" placeholder="🔑 Digite o código da arena" maxlength="6">
+    <br><br>
+    <button class="btn-primary" onclick="joinRoom()">🚀 ENTRAR</button>
+    <button class="btn-secondary" onclick="hideJoinPopup()">❌ CANCELAR</button>
+</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
